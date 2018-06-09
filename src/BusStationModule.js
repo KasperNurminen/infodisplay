@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import './App.css';
-
+import bus_stops from './assets/bus_stops.json'
 
 class BikeStationModule extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
             closest: null,
+            stations_data: null,
             distance: 0
         }
     }
@@ -32,46 +33,32 @@ class BikeStationModule extends Component {
         var distance = this.getDistanceFromLatLonInKm(own_loc[0], own_loc[1], coords[0], coords[1])
         return [distance, index]
     }
-    getClosestBikeStation = (location) => {
-        return fetch('https://data.foli.fi/citybike')
-            .then(function (response) {
-                return response.json();
-            })
-            .then(function (citybike_stops) {
-                var sorted = Object.values(citybike_stops['racks']).map(x => this.getDistance([x.lat, x.lon], x.stop_code, location)).sort()
-                var closest_with_bikes
-                let i = -1
-                do {
-                    i++
-                    closest_with_bikes = Object.values(citybike_stops['racks']).find(x => x.stop_code === sorted[i][1])
-
-                } while (closest_with_bikes.bikes_avail === 7)
-                return [closest_with_bikes, sorted[i][0]]
-
-            }.bind(this))
-
+    getClosestBusStation = (location) => {
+        var sorted = Object.values(bus_stops).map(x => this.getDistance([x.stop_lat, x.stop_lon], x.stop_code, location)).sort()
+        var closest = sorted[0]
+        return [bus_stops[closest[1]], closest[0]]
 
     }
     componentWillReceiveProps(props) {
-        this.getClosestBikeStation(props.location)
-            .then(closest_and_distance => {
+        console.log("received props")
+        let closest = this.getClosestBusStation(props.location)
 
-                this.setState({ closest: closest_and_distance[0], distance: closest_and_distance[1] })
-            })
-
-
+        this.setState({ closest: closest[0], distance: closest[1] })
     }
 
+
     render() {
-        const { closest, distance } = this.state
+        const { closest, distance, stations_data } = this.state
+        let station_data;
+
+
+        console.log("rendering...")
+
         if (closest) {
             return (
                 <div>
-                    <h3>Kaupunkipyörät</h3>
-                    <p>Lähin pysäkki jossa pyöriä: <strong>{closest.name} </strong></p>
-                    <p>Etäisyys:  <strong>{Math.round(distance * 1000)} metriä </strong></p>
-                    <p> {closest.bikes_avail} pyörää saatavilla.</p>
-
+                    <h3>Bussipysäkki-moduuli</h3>
+                    <p>Sinua lähin pysäkki on  {closest.stop_name}. Se on  {Math.round(distance * 1000)} metrin etäisyyllä.</p>
                 </div>
             );
         }

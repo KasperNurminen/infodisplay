@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import logo from './logo.png';
 import './App.css';
+import Divider from '@material-ui/core/Divider';
 import FindLocationDialog from './FindLocationDialog'
 import BikeStationModule from './BikeStationModule'
+import BusStationModule from './BusStationModule'
 
 class App extends Component {
   constructor(props, context) {
@@ -43,6 +45,12 @@ class App extends Component {
 
           location={this.state.location}
         />
+        <Divider />
+        <BusStationModule
+
+          location={this.state.location}
+        />
+        <Divider />
 
       </div>
     );
