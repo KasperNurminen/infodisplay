@@ -33,19 +33,21 @@ class BikeStationModule extends Component {
         return [distance, index]
     }
     getClosestBikeStation = (location) => {
-        return fetch('https://data.foli.fi/citybike')
+        return fetch('https://kaupunkifillarit.fi/api/stations')
             .then(function (response) {
                 return response.json();
             })
             .then(function (citybike_stops) {
-                var sorted = Object.values(citybike_stops['racks']).map(x => this.getDistance([x.lat, x.lon], x.stop_code, location)).sort()
+                var sorted = Object.values(citybike_stops['bikeRentalStations']).map(x => this.getDistance([x.lat, x.lon], x.id, location)).sort()
                 var closest_with_bikes
                 let i = -1
                 do {
                     i++
-                    closest_with_bikes = Object.values(citybike_stops['racks']).find(x => x.stop_code === sorted[i][1])
-
-                } while (closest_with_bikes.bikes_avail === 7)
+                    closest_with_bikes = Object.values(citybike_stops['bikeRentalStations']).find(x => x.id === sorted[i][1])
+                    console.log("closest")
+                    console.log(closest_with_bikes)
+                    console.log([sorted[i][0]])
+                } while (closest_with_bikes.bikesAvailable === 0)
                 return [closest_with_bikes, sorted[i][0]]
 
             }.bind(this))
@@ -70,7 +72,7 @@ class BikeStationModule extends Component {
                     <h3>Kaupunkipyörät</h3>
                     <p>Lähin pysäkki jossa pyöriä: <strong>{closest.name} </strong></p>
                     <p>Etäisyys:  <strong>{Math.round(distance * 1000)} metriä </strong></p>
-                    <p> {closest.bikes_avail} pyörää saatavilla.</p>
+                    <p> {closest.bikesAvailable} pyörää saatavilla.</p>
 
                 </div>
             );
