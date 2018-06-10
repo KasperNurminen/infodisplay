@@ -11,7 +11,7 @@ class App extends Component {
     super(props, context);
     this.state = {
       location: null,
-      closest: null
+      lastUpdated: (new Date()).getTime()
     }
   }
 
@@ -20,7 +20,9 @@ class App extends Component {
     localStorage.setItem("location", JSON.stringify(location))
   }
 
-
+  updateData = () => {
+    this.setState({ lastUpdated: (new Date()).getTime() })
+  }
 
   componentDidMount = () => {
     var location_string = localStorage.getItem("location")
@@ -28,6 +30,7 @@ class App extends Component {
       var location = JSON.parse(location_string)
       this.setLocation(location)
     }
+    setInterval(this.updateData, 1000 * 60)
   }
   render() {
     console.log(this.state.location)
@@ -42,12 +45,12 @@ class App extends Component {
           setLocation={this.setLocation}
         />
         <BikeStationModule
-
+          lastUpdated={this.state.lastUpdated}
           location={this.state.location}
         />
         <Divider />
         <BusStationModule
-
+          lastUpdated={this.state.lastUpdated}
           location={this.state.location}
         />
         <Divider />

@@ -44,9 +44,6 @@ class BikeStationModule extends Component {
                 do {
                     i++
                     closest_with_bikes = Object.values(citybike_stops['bikeRentalStations']).find(x => x.id === sorted[i][1])
-                    console.log("closest")
-                    console.log(closest_with_bikes)
-                    console.log([sorted[i][0]])
                 } while (closest_with_bikes.bikesAvailable === 0)
                 return [closest_with_bikes, sorted[i][0]]
 

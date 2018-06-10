@@ -8,8 +8,7 @@ class BikeStationModule extends Component {
         super(props, context);
         this.state = {
             closest: null,
-            stations_data: null,
-            distance: 0
+            all_timetables: []
         }
     }
     deg2rad = (deg) => {
@@ -33,32 +32,85 @@ class BikeStationModule extends Component {
         var distance = this.getDistanceFromLatLonInKm(own_loc[0], own_loc[1], coords[0], coords[1])
         return [distance, index]
     }
-    getClosestBusStation = (location) => {
+    getClosestBusStations = (location) => {
         var sorted = Object.values(bus_stops).map(x => this.getDistance([x.stop_lat, x.stop_lon], x.stop_code, location)).sort()
-        var closest = sorted[0]
-        return [bus_stops[closest[1]], closest[0]]
+        var closest_stations = []
+        for (var i = 0; i <= 4; i++) {
+            var closest = sorted[i]
+            closest_stations.push([bus_stops[closest[1]], closest[0]])
+        }
+        return closest_stations
+
+    }
+    getTimeTables = stop_info => {
+        return fetch('https://data.foli.fi/siri/sm/' + stop_info[0].stop_code)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (timetables) {
+                let { all_timetables } = this.state
+                timetables['result'].forEach(x => {
+                    x.stop_name = stop_info[0].stop_name
+                    x.distance = Math.round(stop_info[1] * 1000)
+                })
+
+                this.setState({ all_timetables: all_timetables.concat(timetables['result'].slice(0, 3)) })
+
+            }.bind(this))
 
     }
     componentWillReceiveProps(props) {
+        let { closest } = this.state
+        if (!closest) {
+            closest = this.getClosestBusStations(props.location)
+        }
         console.log("received props")
-        let closest = this.getClosestBusStation(props.location)
-
-        this.setState({ closest: closest[0], distance: closest[1] })
+        this.setState({ all_timetables: [] })
+        closest.forEach(x => this.getTimeTables(x))
+        this.setState({ closest: closest })
     }
-
-
+    sortByKey = (array, key) => {
+        return array.sort(function (a, b) {
+            var x = a[key]; var y = b[key];
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        });
+    }
+    renderArrivingBuses = (timetables) => {
+        let timetable_html = []
+        timetables.forEach((x, i) => {
+            timetable_html.push(
+                <p key={i}>{x.stop_name}: <strong>{x.lineref}</strong> {x.destinationdisplay} <i>{x.monitored ? "" : "~"}{Math.round((new Date(x.expectedarrivaltime * 1000) - new Date()) / 1000 / 60)} min (Etäisyys {x.distance} metriä)</i> </p>
+            )
+        })
+        return (
+            <div>
+                {timetable_html}
+            </div>
+        )
+    }
     render() {
-        const { closest, distance, stations_data } = this.state
-        let station_data;
+        const { closest, all_timetables } = this.state
+        var sorted_timetables = this.sortByKey(all_timetables, "expectedarrivaltime")
+        var sorted_timetables_no_duplicates = []
 
+        for (var i = 0; i < sorted_timetables.length - 1; i++) {
+            if (sorted_timetables[i + 1]['destinationdisplay'] !== sorted_timetables[i]['destinationdisplay']) {
+                if (sorted_timetables[i].distance < sorted_timetables[i + 1].distance) {
+                    sorted_timetables_no_duplicates.push(sorted_timetables[i]);
+                }
+                else {
+                    sorted_timetables_no_duplicates.push(sorted_timetables[i + 1]);
+                }
 
-        console.log("rendering...")
-
+            }
+        }
         if (closest) {
             return (
                 <div>
                     <h3>Bussipysäkki-moduuli</h3>
-                    <p>Sinua lähin pysäkki on  {closest.stop_name}. Se on  {Math.round(distance * 1000)} metrin etäisyyllä.</p>
+                    <h4>Sinua lähin pysäkki on  {closest[0][0].stop_name}. Se on {Math.round(closest[0][1] * 1000)}  metrin etäisyyllä.</h4>
+                    <h4> Saapuvat linjat </h4>
+                    <div>{this.renderArrivingBuses(sorted_timetables_no_duplicates)}</div>
                 </div>
             );
         }

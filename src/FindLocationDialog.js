@@ -52,7 +52,7 @@ class FindLocationDialog extends React.Component {
         return (
             <div>
                 <SimpleDialog
-                    open={this.props.location == null}
+                    open={this.props.location === null}
                     setLocation={this.props.setLocation}
                 />
             </div>
