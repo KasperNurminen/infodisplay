@@ -11,12 +11,13 @@ class App extends Component {
     super(props, context);
     this.state = {
       location: null,
-      lastUpdated: (new Date()).getTime()
+      lastUpdated: (new Date()).getTime(),
+      hasLocation: false
     }
   }
 
   setLocation = (location) => {
-    this.setState({ location })
+    this.setState({ location, hasLocation: true })
     localStorage.setItem("location", JSON.stringify(location))
   }
 
@@ -33,7 +34,6 @@ class App extends Component {
     setInterval(this.updateData, 1000 * 60)
   }
   render() {
-    console.log(this.state.location)
     return (
       <div className="App">
         <header className="App-header">
@@ -43,6 +43,7 @@ class App extends Component {
         <FindLocationDialog
           location={this.state.location}
           setLocation={this.setLocation}
+          hasLocation={this.state.hasLocation}
         />
         <BikeStationModule
           lastUpdated={this.state.lastUpdated}

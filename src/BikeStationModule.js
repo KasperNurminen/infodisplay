@@ -35,7 +35,6 @@ class BikeStationModule extends Component {
     getClosestBikeStation = (location) => {
         return fetch('https://data.foli.fi/citybike', { mode: 'cors' })
             .then(function (response) {
-                console.log(response.headers)
                 return response.json();
             })
             .then(function (citybike_stops) {
@@ -44,6 +43,7 @@ class BikeStationModule extends Component {
                 let i = -1
                 do {
                     i++
+                    // eslint-disable-next-line
                     closest_with_bikes = Object.values(citybike_stops['racks']).find(x => x.id === sorted[i][1])
                 } while (closest_with_bikes.bikesAvailable === 0)
                 return [closest_with_bikes, sorted[i][0]]

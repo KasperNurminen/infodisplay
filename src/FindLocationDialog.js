@@ -32,7 +32,7 @@ class SimpleDialog extends React.Component {
         const { loading } = this.state
 
         return (
-            <Dialog {...this.props}>
+            <Dialog open={this.props.open}>
                 <DialogTitle > Location </DialogTitle>
                 <LinearProgress style={{ visibility: loading ? "initial" : "hidden", textAlign: 'center' }} />
                 <Button onClick={this.getLocation}
@@ -47,12 +47,26 @@ SimpleDialog.propTypes = {
 };
 
 class FindLocationDialog extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+        this.state = {
+            open: false
+        }
+    }
+    // following two functions are because material-ui dialog bugs out if open-state changes quickly
+    // feel free to fix
+    componentWillReceiveProps = (props) => {
+        this.setState({ open: !props.hasLocation })
+    }
+    componentDidMount = () => {
+        this.setState({ open: !this.props.hasLocation })
+    }
 
     render() {
         return (
             <div>
                 <SimpleDialog
-                    open={this.props.location === null}
+                    open={this.state.open}
                     setLocation={this.props.setLocation}
                 />
             </div>
@@ -61,7 +75,8 @@ class FindLocationDialog extends React.Component {
 }
 FindLocationDialog.propTypes = {
     setLocation: PropTypes.func.isRequired,
-    location: PropTypes.array
+    location: PropTypes.array,
+    hasLocation: PropTypes.bool.isRequired
 }
 
 export default FindLocationDialog;
