@@ -53,6 +53,9 @@ class BikeStationModule extends Component {
 
     }
     componentWillReceiveProps(props) {
+        if (!props.location) {
+            return
+        }
         this.getClosestBikeStation(props.location)
             .then(closest_and_distance => {
 

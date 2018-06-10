@@ -3,21 +3,61 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import LocationIcon from '@material-ui/icons/MyLocation';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Dialog from '@material-ui/core/Dialog';
-
-
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import { OpenStreetMapProvider } from 'leaflet-geosearch';
+const inputStyle = {
+    width: "70%",
+    padding: "12px 20px",
+    margin: "8px 0",
+    boxSizing: "border-box",
+    marginTop: 4
+}
+const provider = new OpenStreetMapProvider();
 
 class SimpleDialog extends React.Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            loading: false
+            loading: false,
+            suggestions: [],
+            search: ""
         }
     }
+    handleSearchChange = (event) => {
+        this.setState({
+            search: event.target.value
+        })
+        this.searchByAddress(event)
+    }
+    censorForTurku = (string) => { return string }
+    splitString = (string) => { return string.split(",").slice(0, 4).join(", ") }
+    searchByAddress = (event) => {
+        var query = event.target.value
 
+        provider.search({ query: query, })
+            .then((results) => {
+                var suggestions = results.map(x => x.label).filter(x => x.includes("Turku")).map(x => this.splitString(x))
+                this.setState({
+                    suggestions: suggestions
+                })
+                if (query.length > 16) {
+                    var first = results[0]
+                    if (first && first.x && first.y) {
+
+                        this.props.setLocation([first.y, first.x])
+                    }
+
+                }
+
+            })
+
+    }
 
     getLocation = () => {
         this.setState({ loading: true })
@@ -27,16 +67,48 @@ class SimpleDialog extends React.Component {
             this.setState({ loading: false })
         })
     }
+    renderSuggestions = () => {
 
+        var suggestionOptions = this.state.suggestions.map((x, i) => {
+            return (
+                <option
+                    value={x}
+                    key={i}
+                />
+            )
+        })
+
+        return (
+            <datalist id="suggestions" >
+                {suggestionOptions}
+            </datalist>
+        )
+    }
     render() {
         const { loading } = this.state
 
         return (
-            <Dialog open={this.props.open}>
-                <DialogTitle > Location </DialogTitle>
-                <LinearProgress style={{ visibility: loading ? "initial" : "hidden", textAlign: 'center' }} />
-                <Button onClick={this.getLocation}
-                > Automatically locate me! </Button>
+            <Dialog open={this.props.open} >
+                <DialogTitle > Sijainnin määritys </DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Määritä sijaintisi joko painamalla paikannusnappia tai antamalla osoitteesi.
+                    </DialogContentText>
+
+
+
+                    <div style={{ display: "inline-block", width: "100%" }}>
+                        <input style={inputStyle} list="suggestions" placeholder="Etsi osoitteen perusteella..." value={this.state.search} onChange={event => this.handleSearchChange(event)} />
+                        {this.renderSuggestions()}
+
+
+                        <IconButton onClick={this.getLocation}>
+                            < LocationIcon />
+                        </IconButton>
+
+                    </div>
+                    <LinearProgress style={{ visibility: loading ? "initial" : "hidden", textAlign: 'center' }} />
+                </DialogContent>
             </Dialog>
         );
     }
