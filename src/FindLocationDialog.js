@@ -65,7 +65,7 @@ class SimpleDialog extends React.Component {
             var location = [position.coords.latitude, position.coords.longitude]
             this.props.setLocation(location)
             this.setState({ loading: false })
-        })
+        }, (error) => { alert(error.message) })
     }
     renderSuggestions = () => {
 

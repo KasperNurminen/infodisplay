@@ -66,6 +66,11 @@ class BikeStationModule extends Component {
     }
     componentWillReceiveProps(props) {
         if (!props.location) {
+            // ensure that the data gets updated when location changes
+            this.setState({
+                closest: null,
+                all_timetables: []
+            })
             return
         }
         let { closest } = this.state

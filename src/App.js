@@ -5,7 +5,8 @@ import Divider from '@material-ui/core/Divider';
 import FindLocationDialog from './FindLocationDialog'
 import BikeStationModule from './BikeStationModule'
 import BusStationModule from './BusStationModule'
-
+import Button from '@material-ui/core/Button';
+import EditLocation from '@material-ui/icons/EditLocation'
 class App extends Component {
   constructor(props, context) {
     super(props, context);
@@ -20,7 +21,10 @@ class App extends Component {
     this.setState({ location, hasLocation: true })
     localStorage.setItem("location", JSON.stringify(location))
   }
-
+  removeLocation = () => {
+    this.setState({ location: null, hasLocation: false })
+    localStorage.clear()
+  }
   updateData = () => {
     this.setState({ lastUpdated: (new Date()).getTime() })
   }
@@ -37,7 +41,12 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
+
           <img src={logo} className="App-logo" alt="logo" />
+          <Button style={{ float: "right" }} onClick={() => this.removeLocation()} color="primary" variant="contained">
+            Muuta sijaintia
+              <EditLocation />
+          </Button>
           <h1 className="App-title">Info Display</h1>
         </header>
         <FindLocationDialog
