@@ -7,6 +7,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import bus_stops from './assets/bus_stops.json'
 import BusIcon from '@material-ui/icons/DirectionsBus';
+import { getDistance, sortByKey, groupBy } from './utils.js';
 class BikeStationModule extends Component {
     constructor(props, context) {
         super(props, context);
@@ -15,31 +16,10 @@ class BikeStationModule extends Component {
             all_timetables: []
         }
     }
-    deg2rad = (deg) => {
-        return deg * (Math.PI / 180)
-    }
-    getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
-        var R = 6371; // Radius of the earth in km
-        var dLat = this.deg2rad(lat2 - lat1);  // this.deg2rad below
-        var dLon = this.deg2rad(lon2 - lon1);
-        var a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2)
-            ;
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        var d = R * c; // Distance in km
-        return d;
-    }
-    getDistance = (coords, index, own_loc) => {
-
-        var distance = this.getDistanceFromLatLonInKm(own_loc[0], own_loc[1], coords[0], coords[1])
-        return [distance, index]
-    }
     getClosestBusStations = (location) => {
-        var sorted = Object.values(bus_stops).map(x => this.getDistance([x.stop_lat, x.stop_lon], x.stop_code, location)).sort()
+        var sorted = Object.values(bus_stops).map(x => getDistance([x.stop_lat, x.stop_lon], x.stop_code, location)).sort()
         var closest_stations = []
-        for (var i = 0; i <= 4; i++) {
+        for (var i = 0; i <= 4; i++) { // get the first few stations
             var closest = sorted[i]
             closest_stations.push([bus_stops[closest[1]], closest[0]])
         }
@@ -81,18 +61,7 @@ class BikeStationModule extends Component {
         closest.forEach(x => this.getTimeTables(x))
         this.setState({ closest: closest })
     }
-    sortByKey = (array, key) => {
-        return array.sort(function (a, b) {
-            var x = a[key]; var y = b[key];
-            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-        });
-    }
-    groupBy = (xs, key) => {
-        return xs.reduce(function (rv, x) {
-            (rv[x[key]] = rv[x[key]] || []).push(x);
-            return rv;
-        }, {});
-    };
+
     parseTime = (time) => { return Math.round((new Date(time * 1000) - new Date()) / 1000 / 60) }
 
     renderArrivingBuses = (timetables) => {
@@ -121,13 +90,12 @@ class BikeStationModule extends Component {
 
     render() {
         const { closest, all_timetables } = this.state
-        var grouped_timetables = this.groupBy(this.sortByKey(all_timetables, "expectedarrivaltime"), "blockref")
+        var grouped_timetables = groupBy(sortByKey(all_timetables, "expectedarrivaltime"), "blockref")
         var closest_lines = []
         for (var group in grouped_timetables) {
-            var sorted = this.sortByKey(grouped_timetables[group], "distance")
+            var sorted = sortByKey(grouped_timetables[group], "distance")
             closest_lines.push(sorted[0])
         }
-        console.log(closest_lines)
         if (closest) {
             return (
                 <div>

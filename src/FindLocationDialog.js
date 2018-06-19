@@ -35,21 +35,28 @@ class SimpleDialog extends React.Component {
         })
         this.searchByAddress(event)
     }
-    censorForTurku = (string) => { return string }
-    splitString = (string) => { return string.split(",").slice(0, 4).join(", ") }
+    splitString = (string) => {
+        return string
+            .split(",")
+            .slice(0, 4)
+            .join(", ")
+    }
     searchByAddress = (event) => {
         var query = event.target.value
 
         provider.search({ query: query, })
             .then((results) => {
-                var suggestions = results.map(x => x.label).filter(x => x.includes("Turku")).map(x => this.splitString(x))
+                var suggestions = results
+                    .map(x => x.label)
+                    .filter(x => x.includes("Turku"))
+                    .map(x => this.splitString(x))
+
                 this.setState({
                     suggestions: suggestions
                 })
                 if (query.length > 16) {
                     var first = results[0]
                     if (first && first.x && first.y) {
-
                         this.props.setLocation([first.y, first.x])
                     }
 
