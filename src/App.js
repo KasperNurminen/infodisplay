@@ -7,6 +7,10 @@ import BikeStationModule from './BikeStationModule'
 import BusStationModule from './BusStationModule'
 import Button from '@material-ui/core/Button';
 import EditLocation from '@material-ui/icons/EditLocation'
+import {connect} from 'react-redux';
+import { getLocation } from './actions/locationActions';
+import {store} from './index'
+
 class App extends Component {
   constructor(props, context) {
     super(props, context);
@@ -34,10 +38,12 @@ class App extends Component {
     if (location_string) {
       var location = JSON.parse(location_string)
       this.setLocation(location)
+      this.props.addLocationToState(location);
     }
     setInterval(this.updateData, 1000 * 60)
   }
   render() {
+    console.log(store.getState());
     return (
       <div className="App">
         <header className="App-header">
@@ -69,5 +75,16 @@ class App extends Component {
     );
   }
 }
+const mapStateToProps = (state) => {
+  return ({
+    location: state.userLocation
+  })
+}
 
-export default App;
+const mapDispatchToProps = (dispatch) => {
+    return ({
+      addLocationToState : (loc) => dispatch(getLocation(loc))
+    })
+
+}
+export default connect(mapStateToProps , mapDispatchToProps)(App);

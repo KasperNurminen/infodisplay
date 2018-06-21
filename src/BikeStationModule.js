@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import './App.css';
 import { getDistance } from './utils.js';
+import { getClosestBikeStation } from './actions/closestBikeStationActions';
+import {connect} from 'react-redux';
 
 class BikeStationModule extends Component {
     constructor(props, context) {
@@ -39,6 +41,7 @@ class BikeStationModule extends Component {
         this.getClosestBikeStation(props.location)
             .then(closest_and_distance => {
                 this.setState({ closest: closest_and_distance[0], distance: closest_and_distance[1] })
+                this.props.addClosestStationToState(closest_and_distance)
             })
 
 
@@ -71,4 +74,18 @@ BikeStationModule.propTypes = {
     location: PropTypes.array
 };
 
-export default BikeStationModule;
+const mapStateToProps = (state) => {
+    return ({
+      closestBikeStation: state.closestBikeStation.closestBikeStationArray
+    })
+  }
+  
+  const mapDispatchToProps = (dispatch) => {
+      return ({
+        addClosestStationToState : (closest) => dispatch(getClosestBikeStation(closest))
+      })
+  
+  }
+  export default connect(mapStateToProps , mapDispatchToProps)(BikeStationModule);
+  
+

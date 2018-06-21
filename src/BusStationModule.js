@@ -8,7 +8,10 @@ import ListItemText from '@material-ui/core/ListItemText';
 import bus_stops from './assets/bus_stops.json'
 import BusIcon from '@material-ui/icons/DirectionsBus';
 import { getDistance, sortByKey, groupBy } from './utils.js';
-class BikeStationModule extends Component {
+import { getClosestBusStops } from './actions/closestBusStopsActions';
+import {connect} from 'react-redux';
+
+class BusStationModule extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
@@ -60,6 +63,8 @@ class BikeStationModule extends Component {
         this.setState({ all_timetables: [] })
         closest.forEach(x => this.getTimeTables(x))
         this.setState({ closest: closest })
+        this.props.addClosestStopsToState(closest);
+        
     }
 
     parseTime = (time) => { return Math.round((new Date(time * 1000) - new Date()) / 1000 / 60) }
@@ -115,8 +120,21 @@ class BikeStationModule extends Component {
 
     }
 }
-BikeStationModule.propTypes = {
+BusStationModule.propTypes = {
     location: PropTypes.array
 };
 
-export default BikeStationModule;
+const mapStateToProps = (state) => {
+    return ({
+      closestBusStops: state.closestBusStops.closestBusStopsArray
+    })
+  }
+  
+  const mapDispatchToProps = (dispatch) => {
+      return ({
+        addClosestStopsToState : (closest) => dispatch(getClosestBusStops(closest))
+      })
+  
+  }
+  export default connect(mapStateToProps , mapDispatchToProps)(BusStationModule);
+  
