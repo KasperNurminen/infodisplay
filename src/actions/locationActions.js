@@ -1,4 +1,4 @@
-import { GET_LOCATION} from './consts'
+import { GET_LOCATION } from './consts'
 
 
 //takes parameter [latitude, longitude]
