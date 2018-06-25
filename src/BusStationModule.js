@@ -15,7 +15,8 @@ class BusStationModule extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            all_timetables: []
+            all_timetables: [],
+            lastUpdated: (new Date()).getTime()
         }
     }
     getClosestBusStations = (location) => {
@@ -47,22 +48,25 @@ class BusStationModule extends Component {
 
     }
     componentWillReceiveProps(props) {
-        if (!props.location) {
+        console.log("received props")
+        let willReset = false
+        if (!props.location || props.lastUpdated !== this.state.lastUpdated) {
             // ensure that the data gets updated when location changes
             this.setState({
+                lastUpdated: props.lastUpdated,
                 all_timetables: []
             })
-            return
+            willReset = true
         }
-        let { closestBusStops } = this.props
+        let { closestBusStops } = props
         if (!closestBusStops) {
             closestBusStops = this.getClosestBusStations(props.location)
             this.props.addClosestStopsToState(closestBusStops);
 
         }
 
-        if (this.state.all_timetables.length === 0) {
-
+        if (willReset) {
+            console.log("getting more timetables")
             closestBusStops.forEach(x => this.getTimeTables(x))
         }
 
@@ -78,7 +82,7 @@ class BusStationModule extends Component {
                 <ListItem key={i} button>
                     <ListItemIcon><BusIcon /></ListItemIcon>
                     <ListItemText secondary={x.stop_code + " " + x.stop_name + " (" + x.distance + " metrin päästä)"}>
-                        <strong>{x.monitored ? "" : "~"}{this.parseTime(x.expectedarrivaltime)} min:  </strong><i>{x.lineref}</i> {x.destinationdisplay} {x.directionname === "1" ? "(Keskustan suuntaan)" : ""}
+                        <strong>{x.monitored ? " " : "~"}{this.parseTime(x.expectedarrivaltime)} min:  </strong><i>{x.lineref}</i> {x.destinationdisplay} {x.directionname === "1" ? "(Keskustan suuntaan)" : ""}
 
                     </ListItemText>
                 </ListItem>

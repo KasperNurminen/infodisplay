@@ -9,7 +9,8 @@ class BikeStationModule extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            distance: null
+            distance: null,
+            lastUpdated: (new Date()).getTime()
         }
     }
 
@@ -38,15 +39,15 @@ class BikeStationModule extends Component {
             return
         }
 
-        if (this.state.distance) { // prevents too many requests
-            return
-        }
-        this.getClosestBikeStation(props.location)
-            .then(closest_and_distance => {
-                this.setState({ distance: closest_and_distance[1] })
-                this.props.addClosestStationToState(closest_and_distance[0])
-            })
 
+        if (props.lastUpdated !== this.state.lastUpdated) {
+            console.log("updating bike data")
+            this.getClosestBikeStation(props.location)
+                .then(closest_and_distance => {
+                    this.setState({ distance: closest_and_distance[1], lastUpdated: props.lastUpdated })
+                    this.props.addClosestStationToState(closest_and_distance[0])
+                })
+        }
 
     }
 
