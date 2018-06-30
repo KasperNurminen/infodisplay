@@ -7,9 +7,8 @@ import BikeStationModule from './BikeStationModule'
 import BusStationModule from './BusStationModule'
 import Button from '@material-ui/core/Button';
 import EditLocation from '@material-ui/icons/EditLocation'
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import { getLocation } from './actions/locationActions';
-import {store} from './index'
 
 class App extends Component {
   constructor(props, context) {
@@ -37,13 +36,12 @@ class App extends Component {
     var location_string = localStorage.getItem("location")
     if (location_string) {
       var location = JSON.parse(location_string)
-      this.setLocation(location)
+      this.setState({ hasLocation: true })
       this.props.addLocationToState(location);
     }
     setInterval(this.updateData, 1000 * 60)
   }
   render() {
-    console.log(store.getState());
     return (
       <div className="App">
         <header className="App-header">
@@ -56,18 +54,15 @@ class App extends Component {
           <h1 className="App-title">Info Display</h1>
         </header>
         <FindLocationDialog
-          location={this.state.location}
           setLocation={this.setLocation}
           hasLocation={this.state.hasLocation}
         />
         <BikeStationModule
           lastUpdated={this.state.lastUpdated}
-          location={this.state.location}
         />
         <Divider />
         <BusStationModule
           lastUpdated={this.state.lastUpdated}
-          location={this.state.location}
         />
         <Divider />
 
@@ -82,9 +77,9 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-    return ({
-      addLocationToState : (loc) => dispatch(getLocation(loc))
-    })
+  return ({
+    addLocationToState: (loc) => dispatch(getLocation(loc))
+  })
 
 }
-export default connect(mapStateToProps , mapDispatchToProps)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(App);

@@ -9,14 +9,14 @@ import bus_stops from './assets/bus_stops.json'
 import BusIcon from '@material-ui/icons/DirectionsBus';
 import { getDistance, sortByKey, groupBy } from './utils.js';
 import { getClosestBusStops } from './actions/closestBusStopsActions';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 
 class BusStationModule extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            closest: null,
-            all_timetables: []
+            all_timetables: [],
+            lastUpdated: (new Date()).getTime()
         }
     }
     getClosestBusStations = (location) => {
@@ -48,23 +48,28 @@ class BusStationModule extends Component {
 
     }
     componentWillReceiveProps(props) {
-        if (!props.location) {
+        console.log("received props")
+        let willReset = false
+        if (!props.location || props.lastUpdated !== this.state.lastUpdated) {
             // ensure that the data gets updated when location changes
             this.setState({
-                closest: null,
+                lastUpdated: props.lastUpdated,
                 all_timetables: []
             })
-            return
+            willReset = true
         }
-        let { closest } = this.state
-        if (!closest) {
-            closest = this.getClosestBusStations(props.location)
+        let { closestBusStops } = props
+        if (!closestBusStops) {
+            closestBusStops = this.getClosestBusStations(props.location)
+            this.props.addClosestStopsToState(closestBusStops);
+
         }
-        this.setState({ all_timetables: [] })
-        closest.forEach(x => this.getTimeTables(x))
-        this.setState({ closest: closest })
-        this.props.addClosestStopsToState(closest);
-        
+
+        if (willReset) {
+            console.log("getting more timetables")
+            closestBusStops.forEach(x => this.getTimeTables(x))
+        }
+
     }
 
     parseTime = (time) => { return Math.round((new Date(time * 1000) - new Date()) / 1000 / 60) }
@@ -77,7 +82,7 @@ class BusStationModule extends Component {
                 <ListItem key={i} button>
                     <ListItemIcon><BusIcon /></ListItemIcon>
                     <ListItemText secondary={x.stop_code + " " + x.stop_name + " (" + x.distance + " metrin päästä)"}>
-                        <strong>{x.monitored ? "" : "~"}{this.parseTime(x.expectedarrivaltime)} min:  </strong><i>{x.lineref}</i> {x.destinationdisplay} {x.directionname === "1" ? "(Keskustan suuntaan)" : ""}
+                        <strong>{x.monitored ? " " : "~"}{this.parseTime(x.expectedarrivaltime)} min:  </strong><i>{x.lineref}</i> {x.destinationdisplay} {x.directionname === "1" ? "(Keskustan suuntaan)" : ""}
 
                     </ListItemText>
                 </ListItem>
@@ -94,14 +99,15 @@ class BusStationModule extends Component {
     }
 
     render() {
-        const { closest, all_timetables } = this.state
+        const { all_timetables } = this.state
+        const { closestBusStops } = this.props
         var grouped_timetables = groupBy(sortByKey(all_timetables, "expectedarrivaltime"), "blockref")
         var closest_lines = []
         for (var group in grouped_timetables) {
             var sorted = sortByKey(grouped_timetables[group], "distance")
             closest_lines.push(sorted[0])
         }
-        if (closest) {
+        if (closestBusStops) {
             return (
                 <div>
                     <h4> Saapuvat bussit </h4>
@@ -126,15 +132,16 @@ BusStationModule.propTypes = {
 
 const mapStateToProps = (state) => {
     return ({
-      closestBusStops: state.closestBusStops.closestBusStopsArray
+        location: state.location.userLocation,
+        closestBusStops: state.closestBusStops.closestBusStopsArray
     })
-  }
-  
-  const mapDispatchToProps = (dispatch) => {
-      return ({
-        addClosestStopsToState : (closest) => dispatch(getClosestBusStops(closest))
-      })
-  
-  }
-  export default connect(mapStateToProps , mapDispatchToProps)(BusStationModule);
-  
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return ({
+        addClosestStopsToState: (closest) => dispatch(getClosestBusStops(closest))
+    })
+
+}
+export default connect(mapStateToProps, mapDispatchToProps)(BusStationModule);
+

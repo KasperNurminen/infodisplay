@@ -3,14 +3,14 @@ import PropTypes from 'prop-types';
 import './App.css';
 import { getDistance } from './utils.js';
 import { getClosestBikeStation } from './actions/closestBikeStationActions';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 
 class BikeStationModule extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            closest: null,
-            distance: 0
+            distance: null,
+            lastUpdated: (new Date()).getTime()
         }
     }
 
@@ -34,28 +34,33 @@ class BikeStationModule extends Component {
 
 
     }
-    componentWillReceiveProps(props) {
+    componentWillReceiveProps = (props) => {
         if (!props.location) {
             return
         }
-        this.getClosestBikeStation(props.location)
-            .then(closest_and_distance => {
-                this.setState({ closest: closest_and_distance[0], distance: closest_and_distance[1] })
-                this.props.addClosestStationToState(closest_and_distance)
-            })
 
+
+        if (props.lastUpdated !== this.state.lastUpdated) {
+            console.log("updating bike data")
+            this.getClosestBikeStation(props.location)
+                .then(closest_and_distance => {
+                    this.setState({ distance: closest_and_distance[1], lastUpdated: props.lastUpdated })
+                    this.props.addClosestStationToState(closest_and_distance[0])
+                })
+        }
 
     }
 
     render() {
-        const { closest, distance } = this.state
-        if (closest) {
+        const { distance } = this.state
+        const { closestBikeStation } = this.props
+        if ( closestBikeStation) {
             return (
                 <div>
                     <h3>Kaupunkipyörät</h3>
-                    <p>Lähin pysäkki jossa pyöriä: <strong>{closest.name} </strong></p>
+                    <p>Lähin pysäkki jossa pyöriä: <strong>{ closestBikeStation.name} </strong></p>
                     <p>Etäisyys:  <strong>{Math.round(distance * 1000)} metriä </strong></p>
-                    <p> {closest.bikes_avail} pyörää saatavilla.</p>
+                    <p> { closestBikeStation.bikes_avail} pyörää saatavilla.</p>
 
                 </div>
             );
@@ -76,16 +81,17 @@ BikeStationModule.propTypes = {
 
 const mapStateToProps = (state) => {
     return ({
-      closestBikeStation: state.closestBikeStation.closestBikeStationArray
+        location: state.location.userLocation,
+        closestBikeStation: state.closestBikeStation.closestBikeStationArray
     })
-  }
-  
-  const mapDispatchToProps = (dispatch) => {
-      return ({
-        addClosestStationToState : (closest) => dispatch(getClosestBikeStation(closest))
-      })
-  
-  }
-  export default connect(mapStateToProps , mapDispatchToProps)(BikeStationModule);
-  
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return ({
+        addClosestStationToState: (closest) => dispatch(getClosestBikeStation(closest))
+    })
+
+}
+export default connect(mapStateToProps, mapDispatchToProps)(BikeStationModule);
+
 
